@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ClearDrive</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff;
+      --ink: rgba(0,0,0,0.85);
+      --muted: rgba(0,0,0,0.35);
+      --line: 0.5px solid #111;
+      --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --size: 13px;
+    }
+    html { scroll-snap-type: y mandatory; overflow-y: scroll; height: 100%; }
+    body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--size); line-height: 1.4; font-weight: 400; cursor: none; }
+    *, *::before, *::after { cursor: none !important; }
+
+    /* DOT CURSOR */
+    #dot-cursor {
+      position: fixed;
+      top: 0; left: 0;
+      width: 2px; height: 2px;
+      z-index: 999999;
+      pointer-events: none;
+      user-select: none;
+      mix-blend-mode: difference;
+      transform: translate3d(var(--cx, -100px), var(--cy, -100px), 0);
+    }
+    #dot-cursor .circles {
+      position: absolute;
+      top: calc(50% - 1px);
+      left: calc(50% - 1px);
+      display: grid;
+      grid-auto-flow: column;
+      column-gap: 5px;
+      transform: translate(-50%, -50%);
+      transition: transform 0.2s ease;
+    }
+    #dot-cursor .circles::before,
+    #dot-cursor .circles::after {
+      content: "";
+      display: block;
+      width: 11px; height: 11px;
+      border-radius: 50%;
+      background: #fff;
+      transition: width 0.15s ease, height 0.15s ease;
+    }
+    #dot-cursor.on-link .circles::before,
+    #dot-cursor.on-link .circles::after { width: 18px; height: 18px; }
+    #dot-cursor.on-text .circles::before,
+    #dot-cursor.on-text .circles::after { width: 15px; height: 15px; }F-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ClearDrive</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff;
+      --ink: rgba(0,0,0,0.85);
+      --muted: rgba(0,0,0,0.35);
+      --line: 0.5px solid #111;
+      --font: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --size: 13px;
+    }
+    html { scroll-snap-type: y mandatory; overflow-y: scroll; height: 100%; }
+    body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--size); line-height: 1.4; font-weight: 400; cursor: none; }
+    *, *::before, *::after { cursor: none !important; }
+
+
+    a, button { cursor: none; }
+    .snap-section { scroll-snap-align: start; scroll-snap-stop: always; }
+
+    /* ── LANDING ── */
+    #landing {
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .video-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: #000;
+    }
+    .video-bg iframe {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 177.78vh;
+      height: 56.25vw;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%);
+      border: none;
+      pointer-events: none;
+    }
+    .video-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.38);
+      z-index: 1;
+    }
+    .landing-content {
+      position: absolute;
+      z-index: 2;
+      bottom: 5.5rem;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.1rem;
+    }
+    .landing-tagline {
+      font-size: clamp(12px, 1.1vw, 15px);
+      color: rgba(255,255,255,0.72);
+      text-align: center;
+      max-width: 420px;
+      line-height: 1.8;
+    }
+    .landing-enter {
+      font-size: clamp(12px, 1.1vw, 15px);
+      color: rgba(255,255,255,0.72);
+      background: none; border: none;
+      font-family: var(--font);
+      cursor: pointer;
+      letter-spacing: 0em;
+      line-height: 1.8;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .landing-enter:hover { color: rgba(255,255,255,0.95); }
+
+    /* ── C-MARK LOGOMARK ── */
+        .nav-brand {
+      font-size: clamp(38px, 5vw, 56px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      text-decoration: none;
+      color: var(--ink);
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .nav-reg {
+      font-size: 0.38em;
+      vertical-align: super;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+    .c-mark circle {
+      fill: var(--ink);
+    }
+
+    /* ── ENTRY HOVER PREVIEW ── */
+    .preview-card {
+      position: fixed;
+      pointer-events: none;
+      z-index: 999;
+      width: 360px;
+      background: var(--bg);
+      border: 0.1rem solid rgba(0,0,0,0.12);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      overflow: hidden;
+    }
+    .preview-card.visible { opacity: 1; }
+    .preview-card img {
+      display: block;
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      object-position: top;
+      background: #f0f0f0;
+    }
+    .preview-card-label {
+      padding: 0.45rem 0.6rem;
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      border-top: 0.1rem solid rgba(0,0,0,0.07);
+    }
+
+    /* ── INDEX NAV BAR ── */
+    .index-nav {
+      position: sticky;
+      top: 0; z-index: 110;
+      background: var(--bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 1.2rem 0.7rem;
+      transition: background 0.5s ease;
+    }
+    .nav-logo {
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.4rem;
+    }
+    .nav-right a, .nav-right button {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--ink);
+      text-decoration: none;
+      background: none; border: none;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: color 0.15s;
+      padding: 0;
+    }
+    .nav-right a:hover, .nav-right button:hover { color: var(--ink); }
+
+
+    /* ── INDEX LOGO HOVER VIDEO ── */
+    .index-video-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      display: none;
+    }
+    .index-video-bg.active { display: block; }
+    .index-video-bg.visible { opacity: 1; }
+    .index-video-bg iframe {
+      pointer-events: none;
+      position: absolute;
+      width: 100vw;
+      height: 56.25vw; /* 16:9 ratio */
+      min-height: 100vh;
+      min-width: 177.78vh;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: none;
+    }
+
+
+            /* ── LIST ── */
+    #index-page { min-height: 100vh; }
+    #index-page.blurred {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .list { padding-top: 3rem; padding-bottom: 3.5rem; }
+
+    .col-header,
+    .entry,
+    .section-label {
+      display: grid;
+      grid-template-columns: 1fr auto auto auto;
+      gap: 1.2rem;
+      padding-left: 1.2rem;
+      padding-right: 1.2rem;
+    }
+    .col-header {
+      align-items: baseline;
+      padding-top: 0.85rem;
+      padding-bottom: 0.65rem;
+      border-bottom: var(--line);
+    }
+    .col-header span { font-size: var(--size); color: var(--muted); white-space: nowrap; font-weight: 600; }
+    .col-header span:first-child { white-space: normal; color: var(--ink); }
+    .entry {
+      align-items: baseline;
+      padding-top: 0.8rem;
+      padding-bottom: 0.6rem;
+      border-bottom: var(--line);
+      text-decoration: none;
+      color: var(--ink);
+      transition: background 0.08s, color 0.08s;
+    }
+    .entry:hover { background: #000; }
+    .entry:hover span { color: #fff; }
+    .entry-name { font-size: var(--size); }
+    .entry-category { font-size: var(--size); color: var(--muted); white-space: nowrap; }
+    .entry-industry { font-size: var(--size); color: var(--muted); white-space: nowrap; }
+    .entry-year { font-size: var(--size); color: var(--muted); white-space: nowrap; min-width: 2.6rem; text-align: right; }
+    .section-label {
+      align-items: baseline;
+      padding-top: 0.8rem;
+      padding-bottom: 0.6rem;
+      border-top: var(--line);
+      border-bottom: var(--line);
+    }
+    .section-label span { font-size: var(--size); color: var(--ink); }
+    .section-label span:first-child { font-weight: 600; }
+    .section-label span:nth-child(2),
+    .section-label span:nth-child(3),
+    .section-label span:nth-child(4) { white-space: nowrap; color: var(--muted); font-weight: 400; }
+
+        /* ── INFO PAGE ── */
+    #blur-overlay { display: none; }
+
+    #info-page {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: none;
+      overflow: hidden;
+      flex-direction: column;
+      background: rgba(235,235,235,0.75);
+      backdrop-filter: blur(24px) saturate(1.2);
+      -webkit-backdrop-filter: blur(24px) saturate(1.2);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    #info-page.active { display: flex; }
+    #info-page.visible { opacity: 1; }
+    #info-page.active { display: flex; }
+    #info-page.visible { opacity: 1; }
+
+    #info-page.active { display: flex; }
+    #info-page.visible { opacity: 1; }
+
+    .info-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 1.2rem 0.7rem;
+      transition: background 0.5s ease;
+    }
+    .info-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      padding: 1.2rem;
+      gap: 2rem;
+      align-items: start;
+      flex-shrink: 0;
+    }
+    .info-description {
+      font-size: clamp(22px, 4.2vw, 72px);
+      font-weight: 350;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      text-indent: var(--desc-indent, 0);
+    }
+    .info-right { display: flex; flex-direction: column; gap: 1.1rem; padding-top: 0.3rem; overflow-y: auto; max-height: calc(100vh - 8rem); }    .info-contact { font-size: clamp(14px, 1.5vw, 24px); line-height: 1.45; color: var(--ink); }
+    .info-contact a { color: var(--ink); text-decoration: none; }
+    .info-contact a:hover { text-decoration: underline; }
+    .info-cats { font-size: clamp(14px, 1.5vw, 24px); line-height: 1.7; color: var(--ink); }
+    .info-cats strong { font-weight: 400; }
+    .info-cats a { color: var(--ink); text-decoration: none; }
+    .info-cats a:hover { text-decoration: underline; }
+    .info-disclaimer {
+      font-size: clamp(11px, 1.1vw, 16px);
+      line-height: 1.65;
+      color: var(--muted);
+      margin-top: 0.6rem;
+    }
+    .info-disclaimer strong { font-weight: 400; color: var(--ink); }
+    .info-logo-center {
+      display: flex; align-items: center; justify-content: center;
+      flex: 1;
+      min-height: 0;
+      font-size: clamp(18px, 2.5vw, 36px);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── BOTTOM NAV (landing only) ── */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.7rem 1.2rem;
+      background: transparent;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .bottom-nav-left, .bottom-nav-right {
+      display: flex; align-items: center;
+      pointer-events: all;
+      width: 120px;
+    }
+    .bottom-nav-right { justify-content: flex-end; }
+    .bottom-nav-center { display: flex; align-items: center; flex: 1; justify-content: center; }
+    .bottom-nav a {
+      text-decoration: none; color: rgba(255,255,255,0.5);
+      font-size: var(--size); padding: 0 0.55rem;
+      transition: color 0.15s; cursor: pointer;
+      pointer-events: all;
+    }
+    .bottom-nav a:hover, .bottom-nav a.active { color: rgba(255,255,255,0.9); }
+    .bottom-nav-sound {
+      font-size: var(--size); color: rgba(255,255,255,0.5);
+      background: none; border: none; font-family: var(--font);
+      cursor: pointer; padding: 0; transition: color 0.15s;
+    }
+    .bottom-nav-sound:hover { color: rgba(255,255,255,0.9); }
+    .bottom-nav-year {
+      font-size: var(--size); color: rgba(255,255,255,0.5);
+    }
+
+    /* ── INDEX FOOTER ── */
+    .info-spacer { flex: 1; }
+    .info-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 1.2rem;
+      border-top: 1px solid rgba(0,0,0,0.07);
+      pointer-events: all;
+      flex-shrink: 0;
+    }
+    .info-footer-sound {
+      font-size: var(--size);
+      color: var(--muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: var(--font);
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .info-footer-sound:hover { color: var(--ink); }
+    .info-footer-year { font-size: var(--size); color: var(--muted); }
+
+    .index-footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.65rem 1.2rem;
+      z-index: 110;
+      pointer-events: none;
+      background: #fff;
+      border-top: 1px solid rgba(0,0,0,0.07);
+      transition: background 0.5s ease, border-color 0.5s ease;
+      display: none;
+    }
+
+    body.logo-hover .index-nav {
+      background: transparent !important;
+    }
+    body.logo-hover .index-footer {
+      background: transparent !important;
+      border-top-color: transparent !important;
+    }
+    .index-footer-sound {
+      font-size: var(--size);
+      color: var(--muted);
+      pointer-events: all;
+      cursor: pointer;
+      background: none;
+      border: none;
+      font-family: var(--font);
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .index-footer-sound:hover { color: var(--ink); }
+    .index-footer-year { font-size: var(--size); color: var(--muted); }
+
+    @media (max-width: 680px) {
+      .entry, .col-header, .section-label { grid-template-columns: 1fr auto; }
+      .entry-category, .entry-industry,
+      .col-header span:nth-child(2), .col-header span:nth-child(3),
+      .section-label span:nth-child(2), .section-label span:nth-child(3) { display: none; }
+      .info-top { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ LANDING ══ -->
+<section id="landing" class="snap-section">
+  <div class="video-bg">
+    <iframe
+      src="https://player.vimeo.com/video/1133951307?autoplay=1&muted=1&loop=1&background=1&controls=0&playsinline=1&api=1"
+      allow="autoplay; fullscreen; picture-in-picture"
+      title="ClearDrive">
+    </iframe>
+  </div>
+  <div class="landing-content">
+    <p class="landing-tagline">The world's largest index of free online tools for creatives, built for designers, writers, developers, filmmakers, and everyone in between.</p>
+    <button class="landing-enter" onclick="document.getElementById('index-page').scrollIntoView({behavior:'smooth'})">Scroll to enter &darr;</button>
+  </div>
+</section>
+
+<!-- ══ INDEX ══ -->
+<section id="index-page" class="snap-section">
+
+  <nav class="index-nav">
+    <button class="nav-brand"
+      onclick="document.getElementById('landing').scrollIntoView({behavior:'smooth'})"
+      onmouseenter="showIndexVideo(true)"
+      onmouseleave="showIndexVideo(false)"
+    ><span class="nav-logo">ClearDrive<span class="nav-reg">®</span></span>
+    </button>
+    <div class="nav-right">
+      <a onclick="showPage('info')">Information</a>
+      <a href="mailto:hello@cleardrive.org">Contact</a>
+    </div>
+  </nav>
+
+  <!-- Index logo hover video -->
+  <div class="index-video-bg" id="index-video-bg">
+    <iframe id="index-hover-iframe"
+      data-src="https://player.vimeo.com/video/1133951307?background=1&autoplay=1&loop=1&byline=0&title=0&muted=1&controls=0"
+      allow="autoplay; fullscreen"
+      frameborder="0"
+      allowfullscreen>
+    </iframe>
+  </div>
+
+  <div class="list">
+    <div class="col-header">
+      <span>Title</span><span>Category</span><span>Industry</span><span>Year</span>
+    </div>
+    <div class="section-label"><span>Design &amp; UI</span><span></span><span></span><span></span></div>
+    <a href="https://figma.com" target="_blank" class="entry"><span class="entry-name">Figma</span><span class="entry-category">UI Design</span><span class="entry-industry">Design</span><span class="entry-year">2012</span></a>
+    <a href="https://penpot.app" target="_blank" class="entry"><span class="entry-name">Penpot</span><span class="entry-category">Open Source Design</span><span class="entry-industry">Design</span><span class="entry-year">2019</span></a>
+    <a href="https://excalidraw.com" target="_blank" class="entry"><span class="entry-name">Excalidraw</span><span class="entry-category">Wireframing</span><span class="entry-industry">Design</span><span class="entry-year">2020</span></a>
+    <a href="https://www.canva.com" target="_blank" class="entry"><span class="entry-name">Canva</span><span class="entry-category">Graphic Design</span><span class="entry-industry">Design</span><span class="entry-year">2013</span></a>
+    <a href="https://iconify.design" target="_blank" class="entry"><span class="entry-name">Iconify</span><span class="entry-category">Icon Library</span><span class="entry-industry">Design</span><span class="entry-year">2016</span></a>
+    <a href="https://tldraw.com" target="_blank" class="entry"><span class="entry-name">tldraw</span><span class="entry-category">Collaborative Canvas</span><span class="entry-industry">Design</span><span class="entry-year">2021</span></a>
+    <a href="https://www.diagrams.net" target="_blank" class="entry"><span class="entry-name">diagrams.net</span><span class="entry-category">Diagrams</span><span class="entry-industry">Design</span><span class="entry-year">2005</span></a>
+    <a href="https://uizard.io" target="_blank" class="entry"><span class="entry-name">Uizard</span><span class="entry-category">AI Wireframing</span><span class="entry-industry">Design</span><span class="entry-year">2018</span></a>
+    <a href="https://www.framer.com" target="_blank" class="entry"><span class="entry-name">Framer</span><span class="entry-category">Web Design</span><span class="entry-industry">Design</span><span class="entry-year">2014</span></a>
+    <a href="https://svgviewer.dev" target="_blank" class="entry"><span class="entry-name">SVG Viewer</span><span class="entry-category">SVG Editor</span><span class="entry-industry">Design</span><span class="entry-year">2020</span></a>
+    <a href="https://www.photopea.com" target="_blank" class="entry"><span class="entry-name">Photopea</span><span class="entry-category">Advanced Editor</span><span class="entry-industry">Design</span><span class="entry-year">2012</span></a>
+    <a href="https://www.autodraw.com" target="_blank" class="entry"><span class="entry-name">AutoDraw</span><span class="entry-category">AI Drawing</span><span class="entry-industry">Design</span><span class="entry-year">2017</span></a>
+    <a href="https://pixelied.com" target="_blank" class="entry"><span class="entry-name">Pixelied</span><span class="entry-category">Design Editor</span><span class="entry-industry">Design</span><span class="entry-year">2020</span></a>
+
+    <!-- TYPOGRAPHY -->
+    <div class="section-label"><span>Typography</span><span></span><span></span><span></span></div>
+    <a href="https://fontjoy.com" target="_blank" class="entry"><span class="entry-name">Fontjoy</span><span class="entry-category">Font Pairing</span><span class="entry-industry">Typography</span><span class="entry-year">2017</span></a>
+    <a href="https://fonts.google.com" target="_blank" class="entry"><span class="entry-name">Google Fonts</span><span class="entry-category">Font Library</span><span class="entry-industry">Typography</span><span class="entry-year">2010</span></a>
+    <a href="https://wakamaifondue.com" target="_blank" class="entry"><span class="entry-name">Wakamai Fondue</span><span class="entry-category">Font Inspector</span><span class="entry-industry">Typography</span><span class="entry-year">2018</span></a>
+    <a href="https://typescale.com" target="_blank" class="entry"><span class="entry-name">Typescale</span><span class="entry-category">Scale Generator</span><span class="entry-industry">Typography</span><span class="entry-year">2016</span></a>
+    <a href="https://www.fontsquirrel.com" target="_blank" class="entry"><span class="entry-name">Font Squirrel</span><span class="entry-category">Free Fonts</span><span class="entry-industry">Typography</span><span class="entry-year">2009</span></a>
+    <a href="https://fonts.bunny.net" target="_blank" class="entry"><span class="entry-name">Bunny Fonts</span><span class="entry-category">Privacy Fonts</span><span class="entry-industry">Typography</span><span class="entry-year">2022</span></a>
+    <a href="https://wordmark.it" target="_blank" class="entry"><span class="entry-name">Wordmark.it</span><span class="entry-category">Font Preview</span><span class="entry-industry">Typography</span><span class="entry-year">2012</span></a>
+    <a href="https://fontsinuse.com" target="_blank" class="entry"><span class="entry-name">Fonts In Use</span><span class="entry-category">Font Research</span><span class="entry-industry">Typography</span><span class="entry-year">2011</span></a>
+    <a href="https://fontpair.co" target="_blank" class="entry"><span class="entry-name">Font Pair</span><span class="entry-category">Pairing Guide</span><span class="entry-industry">Typography</span><span class="entry-year">2016</span></a>
+    <a href="https://www.whatfontis.com" target="_blank" class="entry"><span class="entry-name">WhatFontIs</span><span class="entry-category">Font Identifier</span><span class="entry-industry">Typography</span><span class="entry-year">2010</span></a>
+    <a href="https://typ.io" target="_blank" class="entry"><span class="entry-name">Typ.io</span><span class="entry-category">Font Inspiration</span><span class="entry-industry">Typography</span><span class="entry-year">2013</span></a>
+
+    <!-- COLOR -->
+    <div class="section-label"><span>Color</span><span></span><span></span><span></span></div>
+    <a href="https://coolors.co" target="_blank" class="entry"><span class="entry-name">Coolors</span><span class="entry-category">Palette Generator</span><span class="entry-industry">Design</span><span class="entry-year">2015</span></a>
+    <a href="https://realtimecolors.com" target="_blank" class="entry"><span class="entry-name">Realtime Colors</span><span class="entry-category">UI Color Preview</span><span class="entry-industry">Design</span><span class="entry-year">2022</span></a>
+    <a href="https://webaim.org/resources/contrastchecker" target="_blank" class="entry"><span class="entry-name">WebAIM Contrast Checker</span><span class="entry-category">Accessibility</span><span class="entry-industry">Design</span><span class="entry-year">2001</span></a>
+    <a href="https://huemint.com" target="_blank" class="entry"><span class="entry-name">Huemint</span><span class="entry-category">AI Color Schemes</span><span class="entry-industry">Design</span><span class="entry-year">2022</span></a>
+    <a href="https://colorhunt.co" target="_blank" class="entry"><span class="entry-name">Color Hunt</span><span class="entry-category">Palette Inspiration</span><span class="entry-industry">Design</span><span class="entry-year">2015</span></a>
+    <a href="https://www.happyhues.co" target="_blank" class="entry"><span class="entry-name">Happy Hues</span><span class="entry-category">UI Palettes</span><span class="entry-industry">Design</span><span class="entry-year">2019</span></a>
+    <a href="https://paletton.com" target="_blank" class="entry"><span class="entry-name">Paletton</span><span class="entry-category">Color Wheel</span><span class="entry-industry">Design</span><span class="entry-year">2002</span></a>
+    <a href="https://haikei.app" target="_blank" class="entry"><span class="entry-name">Haikei</span><span class="entry-category">SVG Backgrounds</span><span class="entry-industry">Design</span><span class="entry-year">2021</span></a>
+    <a href="https://mycolor.space" target="_blank" class="entry"><span class="entry-name">MyColor.space</span><span class="entry-category">Gradient Generator</span><span class="entry-industry">Design</span><span class="entry-year">2018</span></a>
+    <a href="https://oklch.com" target="_blank" class="entry"><span class="entry-name">OKLCH Color</span><span class="entry-category">Modern Color Picker</span><span class="entry-industry">Design</span><span class="entry-year">2022</span></a>
+    <a href="https://uicolors.app" target="_blank" class="entry"><span class="entry-name">UI Colors</span><span class="entry-category">Tailwind Colors</span><span class="entry-industry">Design</span><span class="entry-year">2021</span></a>
+
+    <!-- WRITING & COPY -->
+    <div class="section-label"><span>Writing &amp; Copy</span><span></span><span></span><span></span></div>
+    <a href="https://hemingwayapp.com" target="_blank" class="entry"><span class="entry-name">Hemingway Editor</span><span class="entry-category">Readability</span><span class="entry-industry">Writing</span><span class="entry-year">2013</span></a>
+    <a href="https://wordcounter.net" target="_blank" class="entry"><span class="entry-name">WordCounter</span><span class="entry-category">Word Count</span><span class="entry-industry">Writing</span><span class="entry-year">2012</span></a>
+    <a href="https://coschedule.com/headline-analyzer" target="_blank" class="entry"><span class="entry-name">CoSchedule Headline Analyzer</span><span class="entry-category">Headlines</span><span class="entry-industry">Writing</span><span class="entry-year">2013</span></a>
+    <a href="https://www.grammarly.com" target="_blank" class="entry"><span class="entry-name">Grammarly</span><span class="entry-category">Grammar Check</span><span class="entry-industry">Writing</span><span class="entry-year">2009</span></a>
+    <a href="https://prowritingaid.com" target="_blank" class="entry"><span class="entry-name">ProWritingAid</span><span class="entry-category">Style Editing</span><span class="entry-industry">Writing</span><span class="entry-year">2012</span></a>
+    <a href="https://www.onelook.com/thesaurus" target="_blank" class="entry"><span class="entry-name">OneLook Thesaurus</span><span class="entry-category">Vocabulary</span><span class="entry-industry">Writing</span><span class="entry-year">1999</span></a>
+    <a href="https://www.zenpen.io" target="_blank" class="entry"><span class="entry-name">ZenPen</span><span class="entry-category">Distraction-Free</span><span class="entry-industry">Writing</span><span class="entry-year">2013</span></a>
+    <a href="https://quillbot.com" target="_blank" class="entry"><span class="entry-name">QuillBot</span><span class="entry-category">Paraphrasing</span><span class="entry-industry">Writing</span><span class="entry-year">2017</span></a>
+    <a href="https://www.slickwrite.com" target="_blank" class="entry"><span class="entry-name">Slick Write</span><span class="entry-category">Writing Analysis</span><span class="entry-industry">Writing</span><span class="entry-year">2013</span></a>
+    <a href="https://app.copy.ai" target="_blank" class="entry"><span class="entry-name">Copy.ai</span><span class="entry-category">AI Copywriting</span><span class="entry-industry">Writing</span><span class="entry-year">2020</span></a>
+
+    <!-- IMAGE & PHOTO -->
+    <div class="section-label"><span>Image &amp; Photo</span><span></span><span></span><span></span></div>
+    <a href="https://squoosh.app" target="_blank" class="entry"><span class="entry-name">Squoosh</span><span class="entry-category">Image Compression</span><span class="entry-industry">Photography</span><span class="entry-year">2018</span></a>
+    <a href="https://www.remove.bg" target="_blank" class="entry"><span class="entry-name">Remove.bg</span><span class="entry-category">Background Removal</span><span class="entry-industry">Photography</span><span class="entry-year">2019</span></a>
+    <a href="https://unsplash.com" target="_blank" class="entry"><span class="entry-name">Unsplash</span><span class="entry-category">Stock Photography</span><span class="entry-industry">Photography</span><span class="entry-year">2013</span></a>
+    <a href="https://www.pexels.com" target="_blank" class="entry"><span class="entry-name">Pexels</span><span class="entry-category">Stock Photos</span><span class="entry-industry">Photography</span><span class="entry-year">2015</span></a>
+    <a href="https://pixlr.com" target="_blank" class="entry"><span class="entry-name">Pixlr</span><span class="entry-category">Photo Editor</span><span class="entry-industry">Photography</span><span class="entry-year">2008</span></a>
+    <a href="https://tinypng.com" target="_blank" class="entry"><span class="entry-name">TinyPNG</span><span class="entry-category">Image Compression</span><span class="entry-industry">Photography</span><span class="entry-year">2014</span></a>
+    <a href="https://cleanup.pictures" target="_blank" class="entry"><span class="entry-name">Cleanup.pictures</span><span class="entry-category">AI Object Removal</span><span class="entry-industry">Photography</span><span class="entry-year">2021</span></a>
+    <a href="https://www.iloveimg.com" target="_blank" class="entry"><span class="entry-name">iLoveIMG</span><span class="entry-category">Bulk Image Tools</span><span class="entry-industry">Photography</span><span class="entry-year">2013</span></a>
+    <a href="https://upscayl.org" target="_blank" class="entry"><span class="entry-name">Upscayl</span><span class="entry-category">AI Upscaling</span><span class="entry-industry">Photography</span><span class="entry-year">2022</span></a>
+    <a href="https://www.fotor.com" target="_blank" class="entry"><span class="entry-name">Fotor</span><span class="entry-category">Photo Editor</span><span class="entry-industry">Photography</span><span class="entry-year">2012</span></a>
+    <a href="https://www.befunky.com" target="_blank" class="entry"><span class="entry-name">BeFunky</span><span class="entry-category">Photo Editor</span><span class="entry-industry">Photography</span><span class="entry-year">2009</span></a>
+
+    <!-- VIDEO & MOTION -->
+    <div class="section-label"><span>Video &amp; Motion</span><span></span><span></span><span></span></div>
+    <a href="https://www.davinciresolve.com" target="_blank" class="entry"><span class="entry-name">DaVinci Resolve</span><span class="entry-category">Video Editing</span><span class="entry-industry">Film</span><span class="entry-year">2004</span></a>
+    <a href="https://rive.app" target="_blank" class="entry"><span class="entry-name">Rive</span><span class="entry-category">Interactive Animation</span><span class="entry-industry">Motion</span><span class="entry-year">2018</span></a>
+    <a href="https://lottiefiles.com" target="_blank" class="entry"><span class="entry-name">LottieFiles</span><span class="entry-category">Animation Library</span><span class="entry-industry">Motion</span><span class="entry-year">2017</span></a>
+    <a href="https://www.kapwing.com" target="_blank" class="entry"><span class="entry-name">Kapwing</span><span class="entry-category">Online Video Editor</span><span class="entry-industry">Film</span><span class="entry-year">2017</span></a>
+    <a href="https://clideo.com" target="_blank" class="entry"><span class="entry-name">Clideo</span><span class="entry-category">Video Tools</span><span class="entry-industry">Film</span><span class="entry-year">2019</span></a>
+    <a href="https://www.veed.io" target="_blank" class="entry"><span class="entry-name">VEED.IO</span><span class="entry-category">Video Editor</span><span class="entry-industry">Film</span><span class="entry-year">2019</span></a>
+    <a href="https://ezgif.com" target="_blank" class="entry"><span class="entry-name">EZGif</span><span class="entry-category">GIF Creator</span><span class="entry-industry">Motion</span><span class="entry-year">2014</span></a>
+    <a href="https://animaker.com" target="_blank" class="entry"><span class="entry-name">Animaker</span><span class="entry-category">Animation Studio</span><span class="entry-industry">Motion</span><span class="entry-year">2014</span></a>
+    <a href="https://jitter.video" target="_blank" class="entry"><span class="entry-name">Jitter</span><span class="entry-category">Motion Design</span><span class="entry-industry">Motion</span><span class="entry-year">2021</span></a>
+    <a href="https://app.clipchamp.com" target="_blank" class="entry"><span class="entry-name">Clipchamp</span><span class="entry-category">Video Editor</span><span class="entry-industry">Film</span><span class="entry-year">2013</span></a>
+
+    <!-- AUDIO -->
+    <div class="section-label"><span>Audio</span><span></span><span></span><span></span></div>
+    <a href="https://www.audacityteam.org" target="_blank" class="entry"><span class="entry-name">Audacity</span><span class="entry-category">Audio Editor</span><span class="entry-industry">Audio</span><span class="entry-year">2000</span></a>
+    <a href="https://mp3cut.net" target="_blank" class="entry"><span class="entry-name">MP3Cut</span><span class="entry-category">Audio Cutter</span><span class="entry-industry">Audio</span><span class="entry-year">2012</span></a>
+    <a href="https://freesound.org" target="_blank" class="entry"><span class="entry-name">Freesound</span><span class="entry-category">Sound Library</span><span class="entry-industry">Audio</span><span class="entry-year">2005</span></a>
+    <a href="https://www.bandlab.com" target="_blank" class="entry"><span class="entry-name">BandLab</span><span class="entry-category">Music Production</span><span class="entry-industry">Audio</span><span class="entry-year">2015</span></a>
+    <a href="https://podcast.adobe.com" target="_blank" class="entry"><span class="entry-name">Adobe Podcast</span><span class="entry-category">Audio Enhancement</span><span class="entry-industry">Audio</span><span class="entry-year">2022</span></a>
+    <a href="https://www.lalal.ai" target="_blank" class="entry"><span class="entry-name">LALAL.AI</span><span class="entry-category">Stem Splitter</span><span class="entry-industry">Audio</span><span class="entry-year">2019</span></a>
+    <a href="https://jsfxr.com" target="_blank" class="entry"><span class="entry-name">jsfxr</span><span class="entry-category">Sound FX Generator</span><span class="entry-industry">Audio</span><span class="entry-year">2013</span></a>
+    <a href="https://www.soundtrap.com" target="_blank" class="entry"><span class="entry-name">Soundtrap</span><span class="entry-category">Online DAW</span><span class="entry-industry">Audio</span><span class="entry-year">2012</span></a>
+    <a href="https://pixabay.com/music" target="_blank" class="entry"><span class="entry-name">Pixabay Music</span><span class="entry-category">Royalty-Free Music</span><span class="entry-industry">Audio</span><span class="entry-year">2010</span></a>
+    <a href="https://www.loudly.com" target="_blank" class="entry"><span class="entry-name">Loudly</span><span class="entry-category">AI Music Generation</span><span class="entry-industry">Audio</span><span class="entry-year">2019</span></a>
+
+    <!-- 3D & RENDERING -->
+    <div class="section-label"><span>3D &amp; Rendering</span><span></span><span></span><span></span></div>
+    <a href="https://www.blender.org" target="_blank" class="entry"><span class="entry-name">Blender</span><span class="entry-category">3D Modelling</span><span class="entry-industry">3D</span><span class="entry-year">1995</span></a>
+    <a href="https://spline.design" target="_blank" class="entry"><span class="entry-name">Spline</span><span class="entry-category">3D Web Design</span><span class="entry-industry">3D</span><span class="entry-year">2020</span></a>
+    <a href="https://www.tinkercad.com" target="_blank" class="entry"><span class="entry-name">Tinkercad</span><span class="entry-category">3D Modelling</span><span class="entry-industry">3D</span><span class="entry-year">2011</span></a>
+    <a href="https://threejs.org/editor" target="_blank" class="entry"><span class="entry-name">Three.js Editor</span><span class="entry-category">WebGL</span><span class="entry-industry">3D</span><span class="entry-year">2010</span></a>
+    <a href="https://www.vectary.com" target="_blank" class="entry"><span class="entry-name">Vectary</span><span class="entry-category">3D &amp; AR Design</span><span class="entry-industry">3D</span><span class="entry-year">2016</span></a>
+    <a href="https://clara.io" target="_blank" class="entry"><span class="entry-name">Clara.io</span><span class="entry-category">3D Modelling</span><span class="entry-industry">3D</span><span class="entry-year">2013</span></a>
+    <a href="https://www.meshy.ai" target="_blank" class="entry"><span class="entry-name">Meshy</span><span class="entry-category">AI 3D Generation</span><span class="entry-industry">3D</span><span class="entry-year">2022</span></a>
+    <a href="https://sketchfab.com" target="_blank" class="entry"><span class="entry-name">Sketchfab</span><span class="entry-category">3D Model Library</span><span class="entry-industry">3D</span><span class="entry-year">2012</span></a>
+    <a href="https://www.shadertoy.com" target="_blank" class="entry"><span class="entry-name">Shadertoy</span><span class="entry-category">Shader Playground</span><span class="entry-industry">3D</span><span class="entry-year">2013</span></a>
+
+    <!-- AI & GENERATIVE -->
+    <div class="section-label"><span>AI &amp; Generative</span><span></span><span></span><span></span></div>
+    <a href="https://stability.ai" target="_blank" class="entry"><span class="entry-name">Stable Diffusion</span><span class="entry-category">Image Generation</span><span class="entry-industry">AI</span><span class="entry-year">2022</span></a>
+    <a href="https://ideogram.ai" target="_blank" class="entry"><span class="entry-name">Ideogram</span><span class="entry-category">Text-to-Image</span><span class="entry-industry">AI</span><span class="entry-year">2023</span></a>
+    <a href="https://krea.ai" target="_blank" class="entry"><span class="entry-name">Krea AI</span><span class="entry-category">Real-time Generation</span><span class="entry-industry">AI</span><span class="entry-year">2022</span></a>
+    <a href="https://lexica.art" target="_blank" class="entry"><span class="entry-name">Lexica</span><span class="entry-category">Prompt Search</span><span class="entry-industry">AI</span><span class="entry-year">2022</span></a>
+    <a href="https://elevenlabs.io" target="_blank" class="entry"><span class="entry-name">ElevenLabs</span><span class="entry-category">Voice Synthesis</span><span class="entry-industry">AI</span><span class="entry-year">2022</span></a>
+    <a href="https://runwayml.com" target="_blank" class="entry"><span class="entry-name">RunwayML</span><span class="entry-category">AI Video</span><span class="entry-industry">AI</span><span class="entry-year">2018</span></a>
+    <a href="https://www.perplexity.ai" target="_blank" class="entry"><span class="entry-name">Perplexity AI</span><span class="entry-category">AI Research</span><span class="entry-industry">AI</span><span class="entry-year">2022</span></a>
+    <a href="https://www.nightcafe.studio" target="_blank" class="entry"><span class="entry-name">NightCafe</span><span class="entry-category">AI Art Generator</span><span class="entry-industry">AI</span><span class="entry-year">2019</span></a>
+    <a href="https://playgroundai.com" target="_blank" class="entry"><span class="entry-name">Playground AI</span><span class="entry-category">Image Generation</span><span class="entry-industry">AI</span><span class="entry-year">2022</span></a>
+    <a href="https://deepdreamgenerator.com" target="_blank" class="entry"><span class="entry-name">Deep Dream Generator</span><span class="entry-category">AI Art</span><span class="entry-industry">AI</span><span class="entry-year">2015</span></a>
+
+    <!-- PRODUCTIVITY -->
+    <div class="section-label"><span>Productivity</span><span></span><span></span><span></span></div>
+    <a href="https://www.notion.so" target="_blank" class="entry"><span class="entry-name">Notion</span><span class="entry-category">Notes &amp; Docs</span><span class="entry-industry">Productivity</span><span class="entry-year">2016</span></a>
+    <a href="https://trello.com" target="_blank" class="entry"><span class="entry-name">Trello</span><span class="entry-category">Project Management</span><span class="entry-industry">Productivity</span><span class="entry-year">2011</span></a>
+    <a href="https://obsidian.md" target="_blank" class="entry"><span class="entry-name">Obsidian</span><span class="entry-category">Knowledge Base</span><span class="entry-industry">Productivity</span><span class="entry-year">2020</span></a>
+    <a href="https://www.are.na" target="_blank" class="entry"><span class="entry-name">Are.na</span><span class="entry-category">Research Organiser</span><span class="entry-industry">Productivity</span><span class="entry-year">2011</span></a>
+    <a href="https://www.todoist.com" target="_blank" class="entry"><span class="entry-name">Todoist</span><span class="entry-category">Task Management</span><span class="entry-industry">Productivity</span><span class="entry-year">2007</span></a>
+    <a href="https://linear.app" target="_blank" class="entry"><span class="entry-name">Linear</span><span class="entry-category">Issue Tracking</span><span class="entry-industry">Productivity</span><span class="entry-year">2019</span></a>
+    <a href="https://miro.com" target="_blank" class="entry"><span class="entry-name">Miro</span><span class="entry-category">Collaborative Whiteboard</span><span class="entry-industry">Productivity</span><span class="entry-year">2011</span></a>
+    <a href="https://clockify.me" target="_blank" class="entry"><span class="entry-name">Clockify</span><span class="entry-category">Time Tracking</span><span class="entry-industry">Productivity</span><span class="entry-year">2017</span></a>
+
+    <!-- DEVELOPER TOOLS -->
+    <div class="section-label"><span>Developer Tools</span><span></span><span></span><span></span></div>
+    <a href="https://codepen.io" target="_blank" class="entry"><span class="entry-name">CodePen</span><span class="entry-category">Frontend Playground</span><span class="entry-industry">Development</span><span class="entry-year">2012</span></a>
+    <a href="https://codesandbox.io" target="_blank" class="entry"><span class="entry-name">CodeSandbox</span><span class="entry-category">Online IDE</span><span class="entry-industry">Development</span><span class="entry-year">2017</span></a>
+    <a href="https://stackblitz.com" target="_blank" class="entry"><span class="entry-name">StackBlitz</span><span class="entry-category">Web IDE</span><span class="entry-industry">Development</span><span class="entry-year">2017</span></a>
+    <a href="https://github.com" target="_blank" class="entry"><span class="entry-name">GitHub</span><span class="entry-category">Version Control</span><span class="entry-industry">Development</span><span class="entry-year">2008</span></a>
+    <a href="https://vercel.com" target="_blank" class="entry"><span class="entry-name">Vercel</span><span class="entry-category">Deployment</span><span class="entry-industry">Development</span><span class="entry-year">2015</span></a>
+    <a href="https://regex101.com" target="_blank" class="entry"><span class="entry-name">Regex101</span><span class="entry-category">Regex Tester</span><span class="entry-industry">Development</span><span class="entry-year">2013</span></a>
+    <a href="https://transform.tools" target="_blank" class="entry"><span class="entry-name">Transform.tools</span><span class="entry-category">Code Converter</span><span class="entry-industry">Development</span><span class="entry-year">2019</span></a>
+    <a href="https://caniuse.com" target="_blank" class="entry"><span class="entry-name">Can I Use</span><span class="entry-category">Browser Support</span><span class="entry-industry">Development</span><span class="entry-year">2010</span></a>
+    <a href="https://jsonlint.com" target="_blank" class="entry"><span class="entry-name">JSONLint</span><span class="entry-category">JSON Validator</span><span class="entry-industry">Development</span><span class="entry-year">2010</span></a>
+    <a href="https://netlify.com" target="_blank" class="entry"><span class="entry-name">Netlify</span><span class="entry-category">Hosting</span><span class="entry-industry">Development</span><span class="entry-year">2014</span></a>
+
+    <!-- BRANDING & IDENTITY -->
+    <div class="section-label"><span>Branding &amp; Identity</span><span></span><span></span><span></span></div>
+    <a href="https://www.namecheap.com/logo-maker" target="_blank" class="entry"><span class="entry-name">Namecheap Logo Maker</span><span class="entry-category">Logo Design</span><span class="entry-industry">Branding</span><span class="entry-year">2010</span></a>
+    <a href="https://looka.com" target="_blank" class="entry"><span class="entry-name">Looka</span><span class="entry-category">AI Logo Design</span><span class="entry-industry">Branding</span><span class="entry-year">2016</span></a>
+    <a href="https://www.brandmark.io" target="_blank" class="entry"><span class="entry-name">Brandmark</span><span class="entry-category">Logo Generator</span><span class="entry-industry">Branding</span><span class="entry-year">2016</span></a>
+    <a href="https://www.behance.net" target="_blank" class="entry"><span class="entry-name">Behance</span><span class="entry-category">Portfolio &amp; Inspiration</span><span class="entry-industry">Branding</span><span class="entry-year">2006</span></a>
+    <a href="https://brandfetch.com" target="_blank" class="entry"><span class="entry-name">Brandfetch</span><span class="entry-category">Brand Assets</span><span class="entry-industry">Branding</span><span class="entry-year">2018</span></a>
+    <a href="https://www.mockupworld.co" target="_blank" class="entry"><span class="entry-name">Mockup World</span><span class="entry-category">Free Mockups</span><span class="entry-industry">Branding</span><span class="entry-year">2014</span></a>
+    <a href="https://www.zarla.com" target="_blank" class="entry"><span class="entry-name">Zarla</span><span class="entry-category">Logo &amp; Brand Kit</span><span class="entry-industry">Branding</span><span class="entry-year">2017</span></a>
+
+    <!-- STOCK & ASSETS -->
+    <div class="section-label"><span>Stock &amp; Assets</span><span></span><span></span><span></span></div>
+    <a href="https://www.freepik.com" target="_blank" class="entry"><span class="entry-name">Freepik</span><span class="entry-category">Stock Assets</span><span class="entry-industry">Stock</span><span class="entry-year">2010</span></a>
+    <a href="https://pixabay.com" target="_blank" class="entry"><span class="entry-name">Pixabay</span><span class="entry-category">Free Images &amp; Video</span><span class="entry-industry">Stock</span><span class="entry-year">2010</span></a>
+    <a href="https://www.vecteezy.com" target="_blank" class="entry"><span class="entry-name">Vecteezy</span><span class="entry-category">Vectors &amp; Illustrations</span><span class="entry-industry">Stock</span><span class="entry-year">2008</span></a>
+    <a href="https://undraw.co" target="_blank" class="entry"><span class="entry-name">unDraw</span><span class="entry-category">Open Source Illustrations</span><span class="entry-industry">Stock</span><span class="entry-year">2017</span></a>
+    <a href="https://blush.design" target="_blank" class="entry"><span class="entry-name">Blush</span><span class="entry-category">Illustration Library</span><span class="entry-industry">Stock</span><span class="entry-year">2020</span></a>
+    <a href="https://storyset.com" target="_blank" class="entry"><span class="entry-name">Storyset</span><span class="entry-category">Animated Illustrations</span><span class="entry-industry">Stock</span><span class="entry-year">2021</span></a>
+    <a href="https://www.mixkit.co" target="_blank" class="entry"><span class="entry-name">Mixkit</span><span class="entry-category">Free Video &amp; Audio</span><span class="entry-industry">Stock</span><span class="entry-year">2019</span></a>
+    <a href="https://coverr.co" target="_blank" class="entry"><span class="entry-name">Coverr</span><span class="entry-category">Free Video Footage</span><span class="entry-industry">Stock</span><span class="entry-year">2015</span></a>
+    <a href="https://icons8.com" target="_blank" class="entry"><span class="entry-name">Icons8</span><span class="entry-category">Icons &amp; Illustrations</span><span class="entry-industry">Stock</span><span class="entry-year">2012</span></a>
+    <a href="https://www.flaticon.com" target="_blank" class="entry"><span class="entry-name">Flaticon</span><span class="entry-category">Icon Library</span><span class="entry-industry">Stock</span><span class="entry-year">2010</span></a>
+
+    <!-- PRESENTATION -->
+    <div class="section-label"><span>Presentation</span><span></span><span></span><span></span></div>
+    <a href="https://gamma.app" target="_blank" class="entry"><span class="entry-name">Gamma</span><span class="entry-category">AI Decks</span><span class="entry-industry">Presentation</span><span class="entry-year">2020</span></a>
+    <a href="https://www.beautiful.ai" target="_blank" class="entry"><span class="entry-name">Beautiful.ai</span><span class="entry-category">AI Presentations</span><span class="entry-industry">Presentation</span><span class="entry-year">2016</span></a>
+    <a href="https://prezi.com" target="_blank" class="entry"><span class="entry-name">Prezi</span><span class="entry-category">Dynamic Presentations</span><span class="entry-industry">Presentation</span><span class="entry-year">2009</span></a>
+    <a href="https://slides.com" target="_blank" class="entry"><span class="entry-name">Slides</span><span class="entry-category">HTML Presentations</span><span class="entry-industry">Presentation</span><span class="entry-year">2012</span></a>
+    <a href="https://pitch.com" target="_blank" class="entry"><span class="entry-name">Pitch</span><span class="entry-category">Collaborative Decks</span><span class="entry-industry">Presentation</span><span class="entry-year">2018</span></a>
+    <a href="https://www.visme.co" target="_blank" class="entry"><span class="entry-name">Visme</span><span class="entry-category">Visual Content</span><span class="entry-industry">Presentation</span><span class="entry-year">2013</span></a>
+
+    <!-- SOCIAL MEDIA -->
+    <div class="section-label"><span>Social Media</span><span></span><span></span><span></span></div>
+    <a href="https://buffer.com" target="_blank" class="entry"><span class="entry-name">Buffer</span><span class="entry-category">Scheduling</span><span class="entry-industry">Social</span><span class="entry-year">2010</span></a>
+    <a href="https://later.com" target="_blank" class="entry"><span class="entry-name">Later</span><span class="entry-category">Visual Scheduling</span><span class="entry-industry">Social</span><span class="entry-year">2014</span></a>
+    <a href="https://www.metricool.com" target="_blank" class="entry"><span class="entry-name">Metricool</span><span class="entry-category">Analytics &amp; Scheduling</span><span class="entry-industry">Social</span><span class="entry-year">2016</span></a>
+    <a href="https://socialsizes.io" target="_blank" class="entry"><span class="entry-name">Social Sizes</span><span class="entry-category">Size Reference</span><span class="entry-industry">Social</span><span class="entry-year">2018</span></a>
+    <a href="https://www.canva.com/social-media" target="_blank" class="entry"><span class="entry-name">Canva Social</span><span class="entry-category">Social Graphics</span><span class="entry-industry">Social</span><span class="entry-year">2013</span></a>
+
+  </div>
+</section>
+
+<!-- BLUR OVERLAY -->
+<div id="blur-overlay"></div>
+
+<!-- ══ INFO ══ -->
+<div id="info-page">
+  <nav class="info-nav">
+    <button class="nav-brand" onclick="showPage('index')"><span class="nav-logo">ClearDrive<span class="nav-reg">®</span></span>
+    </button>
+    <div class="nav-right">
+      <a onclick="goToIndex()">Index</a>
+      <a href="mailto:hello@cleardrive.org">Contact</a>
+    </div>
+  </nav>
+  <div class="info-top">
+    <div class="info-description">
+      The world's largest independent index of free online tools for creatives. We curate, categorise, and maintain a searchable directory of tools across design, typography, writing, photography, video, motion, and AI.
+    </div>
+    <div class="info-right">
+      <div class="info-contact">
+        For all enquiries please contact:<br>
+        <a href="mailto:hello@cleardrive.org">Contact</a>
+      </div>
+      <div class="info-cats">
+        <strong>Categories: </strong>
+        <a href="#">Design &amp; UI,</a> <a href="#">Typography,</a> <a href="#">Color,</a>
+        <a href="#">Writing &amp; Copy,</a> <a href="#">Image &amp; Photo,</a>
+        <a href="#">Video &amp; Motion,</a> <a href="#">Audio,</a>
+        <a href="#">3D &amp; Rendering,</a> <a href="#">AI &amp; Generative,</a>
+        <a href="#">Productivity,</a> <a href="#">Developer Tools,</a>
+        <a href="#">Branding &amp; Identity,</a> <a href="#">Social Media,</a>
+        <a href="#">Presentation,</a> <a href="#">Stock &amp; Assets</a>
+      </div>
+      <div class="info-disclaimer">
+        <strong>Mission</strong><br>
+        Traditional creative software has long been expensive and often inaccessible for many young creators. We wanted to change that. The rapid development of artificial intelligence has introduced a new generation of powerful creative tools, many of which are free to use. This has lowered the barrier to entry for designers, writers, filmmakers and artists around the world in a way that has rarely been discussed.<br><br>
+        However, these tools are often difficult to discover and far from common knowledge. ClearDrive was created to solve that problem. ClearDrive is an independent index of free online tools for creatives, bringing together and organising tools across design, typography, writing, photography, video, motion and AI. By making them easier to find, ClearDrive helps creators access the resources they need to experiment, learn and bring their ideas to life.
+      </div>
+      <div class="info-disclaimer">
+        <strong>Disclaimer</strong><br>
+        ClearDrive is an independent research and reference platform. The inclusion of any company, product, or service within the index does not constitute endorsement, affiliation, or sponsorship. All content is provided for research, educational, and informational purposes only.
+      </div>
+      <div class="info-disclaimer">
+        <strong>Website</strong><br>
+        ClearDrive is a single-page HTML5 website, hand-coded in HTML, CSS, and vanilla JavaScript with no frameworks, libraries, or build tools. The layout uses CSS Grid for the index table and CSS custom properties throughout. Navigation between the landing page, index, and information overlay is handled entirely in JavaScript using scroll-snap and fixed positioning.<br><br>
+        <strong>Typography</strong><br>
+        The site uses the native system font stack: -apple-system, BlinkMacSystemFont, Helvetica Neue, Helvetica, Arial, sans-serif — rendering in the default sans-serif of each operating system. On macOS and iOS this is SF Pro, on Windows this is Segoe UI, and on Android this is Roboto. Base font size is 13px with a line-height of 1.4.
+      </div>
+    </div>
+  </div>
+  <div class="info-spacer"></div>
+  <footer class="info-footer">
+    <button class="info-footer-sound" onclick="toggleSound()">Sound off</button>
+    <span class="info-footer-year">2026</span>
+  </footer>
+</div>
+
+<!-- BOTTOM NAV (landing) -->
+<nav class="bottom-nav" id="bottom-nav-landing">
+  <div class="bottom-nav-left">
+    <button class="bottom-nav-sound" id="landing-sound-btn" onclick="toggleSound()">Sound off</button>
+  </div>
+  <div class="bottom-nav-center">
+    <a id="nav-index" class="active" onclick="showPage('index')">Index</a>
+  </div>
+  <div class="bottom-nav-right">
+    <a onclick="showPage('info')" style="color:rgba(255,255,255,0.5);text-decoration:none;font-size:var(--size);">Information</a>
+  </div>
+</nav>
+
+<!-- INDEX FOOTER -->
+<div class="index-footer" id="index-footer">
+  <button class="index-footer-sound" id="sound-btn" onclick="toggleSound()">Sound off</button>
+  <span class="index-footer-year">2026</span>
+</div>
+
+
+<div id="preview-card" class="preview-card">
+  <img id="preview-img" src="" alt=""/>
+  <div id="preview-label" class="preview-card-label"></div>
+</div>
+
+<div id="dot-cursor"><div class="circles"></div></div>
+
+<script>
+function showPage(name) {
+  var infoPage = document.getElementById('info-page');
+  var landing  = document.getElementById('landing');
+  var navInfo  = document.getElementById('nav-info');
+  if (name === 'index') {
+    infoPage.classList.remove('visible');
+    setTimeout(function() {
+      infoPage.classList.remove('active');
+      infoPage.style.display = 'none';
+      document.documentElement.style.overflow = '';
+    }, 250);
+    if (navInfo) navInfo.classList.remove('active');
+    landing.scrollIntoView({ behavior: 'smooth' });
+  } else {
+    // Snap to landing instantly, then lock scroll so info stays pinned over it
+    document.documentElement.scrollTop = 0;
+    document.documentElement.style.overflow = 'hidden';
+    infoPage.style.display = 'flex';
+    infoPage.classList.add('active');
+    setDescIndent();
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        infoPage.classList.add('visible');
+      });
+    });
+    if (navInfo) navInfo.classList.add('active');
+  }
+}
+
+function goToIndex() {
+  var infoPage  = document.getElementById('info-page');
+  var indexPage = document.getElementById('index-page');
+  infoPage.classList.remove('visible');
+  setTimeout(function() {
+    infoPage.classList.remove('active');
+    infoPage.style.display = 'none';
+    document.documentElement.style.overflow = '';
+    indexPage.scrollIntoView({ behavior: 'smooth' });
+  }, 250);
+}
+
+var soundOn = false;
+function toggleSound() {
+  soundOn = !soundOn;
+  var label = soundOn ? 'Sound on' : 'Sound off';
+  var btn1 = document.getElementById('sound-btn');
+  var btn2 = document.getElementById('landing-sound-btn');
+  var btn3 = document.querySelector('.info-footer-sound');
+  if (btn1) btn1.textContent = label;
+  if (btn2) btn2.textContent = label;
+  if (btn3) btn3.textContent = label;
+  var iframe = document.querySelector('.video-bg iframe');
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.postMessage(JSON.stringify({ method: 'setVolume', value: soundOn ? 1 : 0 }), '*');
+  }
+}
+
+// Init
+document.getElementById('info-page').style.display = 'none';
+document.getElementById('bottom-nav-landing').style.display = 'flex';
+document.getElementById('index-footer').style.display = 'none';
+
+
+// Align info-description indent to end of nav-brand "ClearDrive®"
+function setDescIndent() {
+  var brand = document.querySelector('.info-nav .nav-brand');
+  var desc  = document.querySelector('.info-description');
+  if (!brand || !desc) return;
+  // nav has padding-left 1.2rem, info-top also has padding-left 1.2rem
+  // so offset = brand.offsetWidth (the text width, since brand has padding:0)
+  var indent = brand.offsetWidth;
+  desc.style.setProperty('--desc-indent', indent + 'px');
+}
+setDescIndent();
+window.addEventListener('resize', setDescIndent);
+
+// Scroll listener - switch footer between landing and index
+var landingSection = document.getElementById('landing');
+var indexSection   = document.getElementById('index-page');
+window.addEventListener('scroll', function() {
+  if (document.getElementById('info-page').classList.contains('active')) return;
+  var landingBottom = landingSection.getBoundingClientRect().bottom;
+  var landingNav    = document.getElementById('bottom-nav-landing');
+  var indexFooter   = document.getElementById('index-footer');
+  if (landingBottom <= 0) {
+    landingNav.style.display = 'none';
+    indexFooter.style.display = 'flex';
+  } else {
+    landingNav.style.display = 'flex';
+    indexFooter.style.display = 'none';
+  }
+});
+
+// Row hover invert
+document.querySelectorAll('a.entry').forEach(function(row) {
+  row.addEventListener('mouseenter', function() {
+    this.style.background = '#000';
+    this.querySelectorAll('span').forEach(function(s){ s.style.color = '#fff'; });
+  });
+  row.addEventListener('mouseleave', function() {
+    this.style.background = '';
+    this.querySelectorAll('span').forEach(function(s){ s.style.color = ''; });
+  });
+});
+
+// Entry hover preview — preload all screenshots on page load for instant display
+(function(){
+  var card = document.getElementById('preview-card');
+  var cardImg = document.getElementById('preview-img');
+  var cardLabel = document.getElementById('preview-label');
+  var hideTimer = null;
+  var imgCache = {};
+
+  function screenshotUrl(url) {
+    return 'https://s.wordpress.com/mshots/v1/' + encodeURIComponent(url) + '?w=480&h=300';
+  }
+
+  // Preload all entry screenshots silently in background
+  var entries = document.querySelectorAll('.entry');
+  // Preload ALL entry screenshots — 12 parallel chains, guaranteed full coverage
+  setTimeout(function() {
+    var queue = [];
+    document.querySelectorAll('.entry').forEach(function(e){
+      var url = e.getAttribute('href');
+      if (url && !imgCache[url]) queue.push(url);
+    });
+    var active = 0;
+    var qi = 0;
+    var CONCURRENCY = 12;
+    function next() {
+      if (qi >= queue.length) return;
+      var url = queue[qi++];
+      active++;
+      var img = new Image();
+      img.onload = img.onerror = function() { active--; next(); };
+      img.src = screenshotUrl(url);
+      imgCache[url] = img;
+    }
+    for (var i = 0; i < CONCURRENCY; i++) next();
+  }, 400);
+
+  entries.forEach(function(entry) {
+    entry.addEventListener('mouseenter', function(e) {
+      clearTimeout(hideTimer);
+      var url = entry.getAttribute('href');
+      var name = entry.querySelector('.entry-name').textContent;
+      if (url) {
+        if (!imgCache[url]) {
+          var img = new Image();
+          img.src = screenshotUrl(url);
+          imgCache[url] = img;
+        }
+        cardImg.src = imgCache[url].src;
+        cardLabel.textContent = name;
+      }
+      card.classList.add('visible');
+      positionCard(e);
+    });
+    entry.addEventListener('mousemove', positionCard);
+    entry.addEventListener('mouseleave', function() {
+      hideTimer = setTimeout(function(){ card.classList.remove('visible'); }, 60);
+    });
+  });
+
+  function positionCard(e) {
+    var x = e.clientX + 16;
+    var y = e.clientY - 110;
+    if (x + 360 > window.innerWidth - 10) x = e.clientX - 376;
+    if (y + 270 > window.innerHeight - 10) y = window.innerHeight - 280;
+    if (y < 10) y = 10;
+    card.style.left = x + 'px';
+    card.style.top  = y + 'px';
+  }
+})();
+
+function showIndexVideo(show) {
+  var bg = document.getElementById('index-video-bg');
+  var iframe = document.getElementById('index-hover-iframe');
+  var indexPage = document.getElementById('index-page');
+  if (!bg) return;
+  if (show) {
+    if (iframe && !iframe.src && iframe.dataset.src) {
+      iframe.src = iframe.dataset.src;
+    }
+    bg.classList.add('active');
+    requestAnimationFrame(function() {
+      bg.classList.add('visible');
+    });
+    document.body.classList.add('logo-hover');
+  } else {
+    bg.classList.remove('visible');
+    document.body.classList.remove('logo-hover');
+    setTimeout(function() {
+      if (!bg.classList.contains('visible')) {
+        bg.classList.remove('active');
+      }
+    }, 550);
+  }
+}
+
+(function(){
+  var dot = document.getElementById('dot-cursor');
+  document.addEventListener('mousemove', function(e){
+    dot.style.setProperty('--cx', e.clientX + 'px');
+    dot.style.setProperty('--cy', e.clientY + 'px');
+  });
+  document.addEventListener('mouseover', function(e){
+    var el = e.target;
+    var isLink = el.closest('a, button');
+    var isBigText = el.closest('.landing-tagline, .landing-enter, .landing-content, .info-description, .info-logo-center, .nav-brand, .info-cats, .info-contact, .bottom-nav-sound, .bottom-nav-year, .bottom-nav a, .index-footer-year, .index-footer-sound');
+    dot.classList.toggle('on-link', !!isLink && !isBigText);
+    dot.classList.toggle('on-text', !!isBigText);
+  });
+})();
+</script>
+</body>
+</html>
